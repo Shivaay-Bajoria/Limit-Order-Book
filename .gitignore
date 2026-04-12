@@ -1,3 +1,4 @@
+# --- C++ ---
 # Compiled executables
 main
 a.out
@@ -5,8 +6,14 @@ a.out
 # Debugging symbols (macOS)
 *.dSYM/
 
-# VS Code settings (optional, but good practice to ignore)
-.vscode/
+# --- Python ---
+# Virtual Environments (CRITICAL TO IGNORE)
+venv/
+env/
 
-# JSON library (optional: some people ignore this and use package managers, 
-# but since it's header-only, it's fine to leave it out of the gitignore so it pushes to GitHub)
+# Python Cache Files
+__pycache__/
+*.pyc
+
+# --- IDEs ---
+.vscode/
