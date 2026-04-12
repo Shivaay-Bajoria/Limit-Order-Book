@@ -1,6 +1,7 @@
 #include <iostream>
 #include "OrderBook.h"
 #include <iomanip>
+#include <vector>
 
 void OrderBook::addOrder(const Order& order) {
     uint64_t remainingQty = order.quantity;
@@ -92,26 +93,65 @@ void OrderBook::addOrder(const Order& order) {
 };
 
 void OrderBook::printBook() {
-    //To print the Order Book Contents
-    std::cout<<"\n----/CURRENT MARKET/----\n";
-    std::cout<< std::fixed << std::setprecision(2);
+    //Used to clear the terminal and move the cursor to top left
+    std::cout<<"\033[2J\033[H";
 
-    std::cout<<"\n---ASKS(Sellers)----\n";
-    //Used to loop through the asks order list, creating a pointer for all the list elements
-    for (auto it = asks.rbegin();it != asks.rend(); ++it) {
-        uint64_t totalQuantity = 0;
-        //Used to calculate the total quantity, adding all the quantity of the same price 
-        for (const auto& order: it->second) totalQuantity += order.quantity;
-        std::cout << "Price: " << it->first << "| Quantity: " << totalQuantity << "\n";
+    std::cout << "=================================================\n";
+    std::cout << "        LIVE LIMIT ORDER BOOK (Top 10)           \n";
+    std::cout << "=================================================\n\n";
+
+    //Displaying the asks (sellers)
+    //To set the terminal text to RED
+    std::cout << "\033[31m"; 
+    std::cout << "      PRICE (Ticks)     |     VOLUME (Satoshis)  \n";
+    std::cout << "-------------------------------------------------\n";
+
+    //Collecting the top 10 asks for the given symbol
+    std::vector<std::pair<uint64_t, uint64_t>> bestAsks;
+    int askCount = 0;
+    //Using for loop to go through the top 10 asks value
+    for (auto it = asks.begin(); it != asks.end() && askCount < 10; ++it) {
+        uint64_t totalQty = 0;
+        //Used to calculate the total quantity, adding all the quantity of the same price
+        for (const auto& order: it->second) totalQty += order.quantity;
+        bestAsks.push_back({it->first, totalQty});
+        askCount++;
+    }
+    
+    //And then we print the best asks
+    for (auto it = bestAsks.rbegin(); it != bestAsks.rend(); ++it) {
+        std::cout << "      " << it->first << "         |     " << it->second << "\n";
     }
 
-    std::cout<<"\n---BUYS(Buyers)----\n";
+    // Reset terminal text to DEFAULT
+    std::cout << "\033[0m";
+    std::cout << "\n------------------- SPREAD ----------------------\n\n";
+
+    //Displaying the bids(buyers)
+    //To set the terminal text to green
+    std::cout << "\033[32m";
+    std::cout << "      PRICE (Ticks)     |     VOLUME (Satoshis)  \n";
+    std::cout << "-------------------------------------------------\n";
+
     //Same as asks but looping through bids list 
-    for (auto it = bids.rbegin(); it != bids.rend(); ++it) {
-        uint64_t totalQuantity = 0;
-        for (const auto& order: it->second) totalQuantity += order.quantity; 
-        std::cout << "Price: " << it->first << "| Quantity: " << totalQuantity << "\n";
+    std::vector<std::pair<uint64_t, uint64_t>> bestBids;
+    int bidCount = 0;
+    for (auto it = bids.begin(); it != bids.end() && bidCount < 10; ++it) {
+        uint64_t totalQty = 0;
+        for (const auto& order: it->second) totalQty += order.quantity;
+        bestBids.push_back({it->first, totalQty});
+        bidCount++;
     }
+
+    //Printing the best bids
+    for (auto it = bestBids.begin(); it != bestBids.end(); ++it) {
+        std::cout << "      " << it->first << "         |     " << it->second << "\n";
+    }
+
+
+    // Reset terminal text to DEFAULT
+    std::cout << "\033[0m"; 
+    std::cout << "\n=================================================\n";
 };
 
 void OrderBook::cancelOrder(uint64_t OrderId) {
