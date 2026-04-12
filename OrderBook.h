@@ -1,5 +1,5 @@
-#include "Types.h"
 #pragma once
+#include "Types.h"
 #include <unordered_map>
 #include <list>
 #include <map>
@@ -10,8 +10,8 @@ class OrderBook {
         //uint64_t is the price of the stock
         //list<order> is used to keep an ordered list of the orders coming in
         std::map<uint64_t, std::list<Order>> asks;
-        //Using greater<double> to sort it from highest to lowest
-        std::map<uint64_t, std::list<Order>, std::greater<uint64_t> bids;
+        //Using greater<uint64_t> to sort it from highest to lowest
+        std::map<uint64_t, std::list<Order>, std::greater<uint64_t>> bids;
 
         //Using to find the order the trader wants to cancel
         std::unordered_map<uint64_t, std::list<Order>::iterator> orderLookUp;
