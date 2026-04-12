@@ -3,14 +3,14 @@
 #include <iomanip>
 
 void OrderBook::addOrder(const Order& order) {
-    uint32_t remainingQty = order.quantity;
+    uint64_t remainingQty = order.quantity;
 
     //Checking if the user is selling or buying
     if (order.side == Side::Buy) {
         //Checking if we have any sell orders with price greater or equal to the buy price
         while (remainingQty > 0 && !asks.empty() && order.price >= asks.begin()->first) {
             auto priceLevelIt = asks.begin();
-            double bestAskPrice = priceLevelIt->first;
+            uint64_t bestAskPrice = priceLevelIt->first;
             //Finding the list of people in that price level
             auto& orderList = priceLevelIt->second;
 
@@ -54,7 +54,7 @@ void OrderBook::addOrder(const Order& order) {
         //Checking whether if there are any buying orders and whether the price is less than the buying order
         while (remainingQty > 0 && !bids.empty() && order.price <= bids.begin()->first) {
             auto priceLevelIt = bids.begin();
-            double bestBidPrice = priceLevelIt->first;
+            uint64_t bestBidPrice = priceLevelIt->first;
             auto& orderList = priceLevelIt->second;
 
             while (remainingQty > 0 && !orderList.empty()) {
@@ -99,7 +99,7 @@ void OrderBook::printBook() {
     std::cout<<"\n---ASKS(Sellers)----\n";
     //Used to loop through the asks order list, creating a pointer for all the list elements
     for (auto it = asks.rbegin();it != asks.rend(); ++it) {
-        u_int32_t totalQuantity = 0;
+        uint64_t totalQuantity = 0;
         //Used to calculate the total quantity, adding all the quantity of the same price 
         for (const auto& order: it->second) totalQuantity += order.quantity;
         std::cout << "Price: " << it->first << "| Quantity: " << totalQuantity << "\n";
@@ -108,13 +108,13 @@ void OrderBook::printBook() {
     std::cout<<"\n---BUYS(Buyers)----\n";
     //Same as asks but looping through bids list 
     for (auto it = bids.rbegin(); it != bids.rend(); ++it) {
-        u_int32_t totalQuantity = 0;
+        uint64_t totalQuantity = 0;
         for (const auto& order: it->second) totalQuantity += order.quantity; 
         std::cout << "Price: " << it->first << "| Quantity: " << totalQuantity << "\n";
     }
 };
 
-void OrderBook::cancelOrder(u_int64_t OrderId) {
+void OrderBook::cancelOrder(uint64_t OrderId) {
     //Fail safe to check whether the orderId evens exists. If it doesn't we go back
     if (orderLookUp.find(OrderId) == orderLookUp.end()) {
         std::cout<< OrderId << " not found" << "\n";

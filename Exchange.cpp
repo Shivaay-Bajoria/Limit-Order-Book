@@ -6,7 +6,7 @@ void Exchange::processOrder(const std::string& symbol, const Order& order) {
     orderBooks[symbol].addOrder(order);
 };
 
-void Exchange::cancelOrder(const std::string& symbol, u_int64_t orderId) {
+void Exchange::cancelOrder(const std::string& symbol, uint64_t orderId) {
     //Checking if the order is even there in the book or not
     if (orderBooks.find(symbol) != orderBooks.end()) {
         orderBooks[symbol].cancelOrder(orderId);
