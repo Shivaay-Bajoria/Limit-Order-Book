@@ -4,25 +4,53 @@
 #include <iostream>
 #include <string>
 #include "Exchange.h"
+#include <sys/socket.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 using json = nlohmann::json;
 
 int main() {
+
+    //Creating our TCP Socket
+    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    sockaddr_in address;
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    //To specify we are using port 5555
+    address.sin_port = htons(5555); 
+
+    //Binding the socket
+    bind(server_fd, (struct sockaddr*)&address, sizeof(address));
+    listen(server_fd, 3);
+
     OrderBook book;
-    std::string incomingLine;
     Exchange newExchange;
 
-    std::cout<<"------Started------Listening for orders\n";
+    std::cout<<"------Started------\n";
+    std::cout<<"waiting for python to connect to port 5555\n";
 
-    //Running a continous loop, to always get the value, to take the inputs without stopping
-    while(std::getline(std::cin, incomingLine)) {
+    int python_socket = accept(server_fd, nullptr, nullptr);
+    std::cout << "Python Bot Connected! Starting data feed...\n";
 
-        //Checking if input is empty, then skipping
-        if (incomingLine.empty()) continue;
+    char buffer[1024] = {0};
+
+    //Running a continous loop, for two-way connection
+    while(true) {
+        int valread = read(python_socket, buffer, 1024);
+        //Disconnect pytyon, if no data sent by python
+        if (valread <= 0) break; 
+
+        //Getiing the input from python
+        std::string json_order(buffer, valread);
 
         try {
             //Parsing the incoming data 
-            json parsedData = json::parse(incomingLine);
+            json parsedData = json::parse(json_order);
 
             std::string symbol = parsedData["symbol"];
 
@@ -39,10 +67,16 @@ int main() {
             //Printing the order book of the symbol which has changed
             newExchange.printOrder(symbol);
 
-        } 
-        catch (const json:: exception& e) {
-            std::cerr<<"JSON Parsing Error " << e.what() << "\n";
+            //Sending the AK back to python
+            std::string response = "{\"status\": \"CONFIRMED\", \"message\": \"Order received by C++ Engine\"}";
+            send(python_socket, response.c_str(), response.length(), 0);
+            
+        } catch (const json::parse_error& e) {
+            std::cerr << "Network collision detected, dropping malformed packet.\n";
         }
     }
+
+    close(python_socket);
+    close(server_fd);
     return 0;
 }
